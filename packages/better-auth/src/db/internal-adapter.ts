@@ -1022,6 +1022,53 @@ export const createInternalAdapter = (
 			);
 			return verification;
 		},
+		findAllVerificationsByPattern: async (
+			pattern: string,
+			context?: GenericEndpointContext,
+		) => {
+			const verifications = await (
+				await getCurrentAdapter(adapter)
+			).findMany<Verification>({
+				model: "verification",
+				where: [
+					{
+						field: "identifier",
+						value: pattern,
+						operator: "starts_with",
+					},
+				],
+			});
+
+			if (!options.verification?.disableCleanup) {
+				await (await getCurrentAdapter(adapter)).deleteMany({
+					model: "verification",
+					where: [
+						{
+							field: "expiresAt",
+							value: new Date(),
+							operator: "lt",
+						},
+					],
+				});
+			}
+
+			return verifications;
+		},
+		deleteAllVerificationsByPattern: async (
+			pattern: string,
+			context?: GenericEndpointContext,
+		) => {
+			await (await getCurrentAdapter(adapter)).deleteMany({
+				model: "verification",
+				where: [
+					{
+						field: "identifier",
+						value: pattern,
+						operator: "starts_with",
+					},
+				],
+			});
+		},
 	};
 };
 
